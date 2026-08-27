@@ -1,0 +1,6 @@
+name: labor-edu-forge-dev
+channels:
+  - defaults
+dependencies:
+  - nodejs=24
+  - git

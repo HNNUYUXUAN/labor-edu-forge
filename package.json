@@ -1,0 +1,32 @@
+{
+  "name": "labor-edu-forge",
+  "version": "1.0.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "description": "面向师范生与新教师的劳动教育备课工作台",
+  "workspaces": ["client", "server", "packages/*"],
+  "scripts": {
+    "dev": "concurrently -n client,server -c blue,red \"npm run dev -w @labor-edu-forge/client\" \"npm run dev -w @labor-edu-forge/server\"",
+    "dev:e2e": "concurrently -n client,server -c blue,red \"cross-env VITE_API_TARGET=http://127.0.0.1:37857 npm run dev -w @labor-edu-forge/client -- --port 5174\" \"cross-env PORT=37857 npm run dev:e2e -w @labor-edu-forge/server\"",
+    "build": "npm run build -w @labor-edu-forge/shared && npm run build -w @labor-edu-forge/client && npm run build -w @labor-edu-forge/server",
+    "typecheck": "npm run typecheck -w @labor-edu-forge/shared && npm run typecheck -w @labor-edu-forge/client && npm run typecheck -w @labor-edu-forge/server",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "license:check": "license-checker-rseidelsohn --production --excludePrivatePackages --onlyAllow \"MIT;Apache-2.0;BSD-2-Clause;BSD-3-Clause;ISC;0BSD;CC0-1.0;Unlicense;OFL-1.1\"",
+    "check": "npm run typecheck && npm run test && npm run build"
+  },
+  "devDependencies": {
+    "license-checker-rseidelsohn": "5.0.1",
+    "@playwright/test": "^1.55.0",
+    "@types/supertest": "^6.0.3",
+    "concurrently": "^9.2.1",
+    "cross-env": "^10.0.0",
+    "supertest": "^7.1.4",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  },
+  "overrides": {
+    "shell-quote": "1.10.0"
+  }
+}
