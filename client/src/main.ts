@@ -2,7 +2,7 @@ import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
-import '@fontsource-variable/noto-sans-sc'
+import 'katex/dist/katex.min.css'
 import '@fontsource-variable/noto-serif-sc'
 import './style.css'
 

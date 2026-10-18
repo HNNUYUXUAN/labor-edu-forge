@@ -25,41 +25,41 @@
           <TabsContent value="lessonDesign">
             <div class="section-heading"><h2>教学目标</h2><button v-if="!readonly" class="text-button" @click="editing.lessonDesign = !editing.lessonDesign"><SquarePen :size="18" />{{ editing.lessonDesign ? '完成编辑' : '编辑内容' }}</button></div>
             <textarea v-if="editing.lessonDesign" aria-label="教学目标（每行一项）" v-model="objectivesText" class="editor-textarea" rows="6" @input="applyObjectives" />
-            <ol v-else class="number-list"><li v-for="item in draft.lessonDesign.objectives" :key="item">{{ item }}</li></ol>
+            <ol v-else class="number-list"><li v-for="item in draft.lessonDesign.objectives" :key="item"><MathText :text="item" /></li></ol>
             <div class="rule" />
             <div class="section-heading"><h2>教学流程</h2></div>
             <div class="process-table">
               <div class="process-row process-head"><span>教学环节</span><span>时间</span><span>教师活动</span><span>学生活动</span><span>设计意图</span></div>
               <div v-for="(item, index) in draft.lessonDesign.teachingProcess" :key="index" class="process-row">
                 <strong><i />{{ item.stage }}</strong><span>{{ item.minutes }} 分钟</span>
-                <textarea v-if="editing.lessonDesign" :aria-label="`${item.stage}教师活动（每行一项）`" v-model="teacherActivities[index]" @input="updateActions(index, 'teacherActions', $event)" /><span v-else>{{ item.teacherActions.join('；') }}</span>
-                <textarea v-if="editing.lessonDesign" :aria-label="`${item.stage}学生活动（每行一项）`" v-model="studentActivities[index]" @input="updateActions(index, 'studentActions', $event)" /><span v-else>{{ item.studentActions.join('；') }}</span>
-                <textarea v-if="editing.lessonDesign" :aria-label="`${item.stage}设计意图`" v-model="item.intention" @input="scheduleSave('lessonDesign')" /><span v-else>{{ item.intention }}</span>
+                <textarea v-if="editing.lessonDesign" :aria-label="`${item.stage}教师活动（每行一项）`" v-model="teacherActivities[index]" @input="updateActions(index, 'teacherActions', $event)" /><span v-else><MathText :text="item.teacherActions.join('；')" /></span>
+                <textarea v-if="editing.lessonDesign" :aria-label="`${item.stage}学生活动（每行一项）`" v-model="studentActivities[index]" @input="updateActions(index, 'studentActions', $event)" /><span v-else><MathText :text="item.studentActions.join('；')" /></span>
+                <textarea v-if="editing.lessonDesign" :aria-label="`${item.stage}设计意图`" v-model="item.intention" @input="scheduleSave('lessonDesign')" /><span v-else><MathText :text="item.intention" /></span>
               </div>
             </div>
-            <div class="rule" /><h2>安全提示</h2><ul class="plain-list"><li v-for="item in draft.lessonDesign.safetyNotes" :key="item">{{ item }}</li></ul>
+            <div class="rule" /><h2>安全提示</h2><ul class="plain-list"><li v-for="item in draft.lessonDesign.safetyNotes" :key="item"><MathText :text="item" /></li></ul>
           </TabsContent>
 
           <TabsContent value="studentTaskSheet">
             <div class="section-heading"><h2>{{ draft.studentTaskSheet.title }}</h2><button v-if="!readonly" class="text-button" @click="editing.studentTaskSheet = !editing.studentTaskSheet"><SquarePen :size="18" />{{ editing.studentTaskSheet ? '完成编辑' : '编辑内容' }}</button></div>
-            <label class="content-label">任务目标</label><textarea v-if="editing.studentTaskSheet" aria-label="任务目标" v-model="draft.studentTaskSheet.taskGoal" class="editor-textarea" rows="3" @input="scheduleSave('studentTaskSheet')" /><p v-else class="document-lead">{{ draft.studentTaskSheet.taskGoal }}</p>
-            <h2>任务步骤</h2><textarea v-if="editing.studentTaskSheet" aria-label="任务步骤（每行一项）" v-model="stepsText" class="editor-textarea" rows="8" @input="applySteps" /><ol v-else class="task-steps"><li v-for="item in draft.studentTaskSheet.steps" :key="item">{{ item }}</li></ol>
-            <h2>观察与记录</h2><div class="record-grid"><article v-for="item in draft.studentTaskSheet.recordPrompts" :key="item.label"><strong>{{ item.label }}</strong><p>{{ item.hint }}</p><span /></article></div>
+            <label class="content-label">任务目标</label><textarea v-if="editing.studentTaskSheet" aria-label="任务目标" v-model="draft.studentTaskSheet.taskGoal" class="editor-textarea" rows="3" @input="scheduleSave('studentTaskSheet')" /><p v-else class="document-lead"><MathText :text="draft.studentTaskSheet.taskGoal" /></p>
+            <h2>任务步骤</h2><textarea v-if="editing.studentTaskSheet" aria-label="任务步骤（每行一项）" v-model="stepsText" class="editor-textarea" rows="8" @input="applySteps" /><ol v-else class="task-steps"><li v-for="item in draft.studentTaskSheet.steps" :key="item"><MathText :text="item" /></li></ol>
+            <h2>观察与记录</h2><div class="record-grid"><article v-for="item in draft.studentTaskSheet.recordPrompts" :key="item.label"><strong><MathText :text="item.label" /></strong><p><MathText :text="item.hint" /></p><span /></article></div>
           </TabsContent>
 
           <TabsContent value="rubric">
             <div class="section-heading"><h2>{{ draft.rubric.title }}</h2><button v-if="!readonly" class="text-button" @click="editing.rubric = !editing.rubric"><SquarePen :size="18" />{{ editing.rubric ? '完成编辑' : '编辑内容' }}</button></div>
-            <div class="rubric-table"><div class="rubric-row rubric-head"><span>评价维度</span><span>表现优秀</span><span>达到要求</span><span>继续发展</span></div><div v-for="item in draft.rubric.dimensions" :key="item.dimension" class="rubric-row"><strong>{{ item.dimension }}</strong><template v-if="editing.rubric"><textarea :aria-label="`${item.dimension}：表现优秀`" v-model="item.excellent" @input="scheduleSave('rubric')" /><textarea :aria-label="`${item.dimension}：达到要求`" v-model="item.competent" @input="scheduleSave('rubric')" /><textarea :aria-label="`${item.dimension}：继续发展`" v-model="item.developing" @input="scheduleSave('rubric')" /></template><template v-else><span>{{ item.excellent }}</span><span>{{ item.competent }}</span><span>{{ item.developing }}</span></template></div></div>
+            <div class="rubric-table"><div class="rubric-row rubric-head"><span>评价维度</span><span>表现优秀</span><span>达到要求</span><span>继续发展</span></div><div v-for="item in draft.rubric.dimensions" :key="item.dimension" class="rubric-row"><strong>{{ item.dimension }}</strong><template v-if="editing.rubric"><textarea :aria-label="`${item.dimension}：表现优秀`" v-model="item.excellent" @input="scheduleSave('rubric')" /><textarea :aria-label="`${item.dimension}：达到要求`" v-model="item.competent" @input="scheduleSave('rubric')" /><textarea :aria-label="`${item.dimension}：继续发展`" v-model="item.developing" @input="scheduleSave('rubric')" /></template><template v-else><span><MathText :text="item.excellent" /></span><span><MathText :text="item.competent" /></span><span><MathText :text="item.developing" /></span></template></div></div>
           </TabsContent>
 
           <TabsContent value="animation">
             <div class="section-heading"><h2>{{ draft.animation.title }}</h2><button v-if="!readonly" class="text-button" @click="editing.animation = !editing.animation"><SquarePen :size="18" />{{ editing.animation ? '完成编辑' : '编辑说明' }}</button></div>
-            <label class="content-label">演示原理</label><textarea v-if="editing.animation" aria-label="演示原理" v-model="draft.animation.principle" class="editor-textarea" rows="4" @input="scheduleSave('animation')" /><p v-else class="document-lead">{{ draft.animation.principle }}</p>
-            <label class="content-label">教师提示</label><textarea v-if="editing.animation" aria-label="教师提示" v-model="draft.animation.teacherTip" class="editor-textarea" rows="4" @input="scheduleSave('animation')" /><p v-else>{{ draft.animation.teacherTip }}</p>
+            <label class="content-label">演示原理</label><textarea v-if="editing.animation" aria-label="演示原理" v-model="draft.animation.principle" class="editor-textarea" rows="4" @input="scheduleSave('animation')" /><p v-else class="document-lead"><MathText :text="draft.animation.principle" legacy /></p>
+            <label class="content-label">教师提示</label><textarea v-if="editing.animation" aria-label="教师提示" v-model="draft.animation.teacherTip" class="editor-textarea" rows="4" @input="scheduleSave('animation')" /><p v-else><MathText :text="draft.animation.teacherTip" legacy /></p>
             <div v-if="!readonly" class="refine-box"><h3>用自然语言优化动画</h3><p>{{ refineExample }}</p><textarea aria-label="动画修改要求" v-model="refineInstruction" rows="3" maxlength="500" /><button class="button primary" :disabled="refining || refineInstruction.trim().length < 2" @click="runRefine">{{ refining ? '正在优化…' : '优化动画' }}</button><p v-if="refining" role="status">正在按要求调整动画，可能需要数分钟。完成前请保持页面打开。</p><span v-if="refineError" class="error-text" role="alert">{{ refineError }}</span></div>
           </TabsContent>
         </fieldset>
-        <aside class="animation-pane"><h2>动画演示</h2><AnimationPlayer :spec="draft.animation" /><h3>教师提示</h3><p>{{ draft.animation.teacherTip }}</p><p class="info-note"><Info :size="18" />动画由 AI 生成，仅做教学参考，请结合实际学情使用。</p></aside>
+        <aside class="animation-pane"><h2>动画演示</h2><AnimationPlayer :spec="draft.animation" /><h3>教师提示</h3><p><MathText :text="draft.animation.teacherTip" legacy /></p><p class="info-note"><Info :size="18" />动画由 AI 生成，仅做教学参考，请结合实际学情使用。</p></aside>
       </div>
     </TabsRoot>
   </section>
@@ -74,6 +74,7 @@ import { ArrowRight, CircleCheck, Info, RefreshCw, SquarePen } from '@lucide/vue
 import type { LessonProject } from '@labor-edu-forge/shared'
 import { ApiError, exportUrl, refineAnimation, updateProject, type EditableSection } from '../api/client'
 import AnimationPlayer from './AnimationPlayer.vue'
+import MathText from './MathText.vue'
 
 const props = withDefaults(defineProps<{ project: LessonProject; readonly?: boolean; templateId?: string }>(), { readonly: false, templateId: '' })
 const draft = reactive<LessonProject>(JSON.parse(JSON.stringify(props.project)) as LessonProject)

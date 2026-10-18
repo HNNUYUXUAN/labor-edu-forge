@@ -39,11 +39,37 @@ test('three-step flow creates, edits and exports a project', async ({ page }, te
   const objectives = page.locator('.editor-textarea').first()
   await objectives.fill('理解斜面省力原理\n能够安全完成合作搬运')
   await expect(page.getByText('已保存')).toBeVisible({ timeout: 5_000 })
+  await objectives.fill(String.raw`理解斜面拉力 \(F=mg\sin\theta\)`)
+  await expect(page.getByText('已保存')).toBeVisible({ timeout: 5_000 })
+  await page.getByRole('button', { name: '完成编辑' }).click()
+  await expect(page.locator('.number-list .katex')).toHaveCount(1)
+  await page.reload()
+  await expect(page.locator('.number-list .katex')).toHaveCount(1)
+  await page.getByRole('button', { name: '编辑内容' }).first().click()
+  await page.locator('.editor-textarea').first().fill(String.raw`公式 \(F=ma\) 与原文 <img src=x onerror=alert(1)>`)
+  await expect(page.getByText('已保存')).toBeVisible({ timeout: 5_000 })
+  await page.getByRole('button', { name: '完成编辑' }).click()
+  await expect(page.locator('.number-list img')).toHaveCount(0)
+  await expect(page.locator('.number-list')).toContainText('<img src=x onerror=alert(1)>')
   const downloadPromise = page.waitForEvent('download')
   await page.getByRole('button', { name: /导出备课包/ }).click()
   const download = await downloadPromise
   expect(download.suggestedFilename()).toContain('备课包')
   await page.screenshot({ path: testInfo.outputPath('project-workbench.png'), fullPage: true })
+})
+
+test('all built-in diagrams render math and retain playback controls', async ({ page }) => {
+  for (const id of ['inclined-plane', 'lever-weighing', 'pulley-watering']) {
+    await page.goto(`/templates/${id}`)
+    await page.getByRole('tab', { name: '动画演示', exact: true }).click()
+    await expect(page.locator('.animation-stage .katex').first()).toBeVisible()
+    await expect(page.locator('.katex-error')).toHaveCount(0)
+    await page.getByRole('button', { name: '播放', exact: true }).click()
+    await expect.poll(async () => Number(await page.getByLabel('动画进度').inputValue())).toBeGreaterThan(0)
+    await page.getByRole('button', { name: '暂停', exact: true }).click()
+    await expect(page.getByRole('button', { name: '播放', exact: true })).toBeVisible()
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+  }
 })
 
 test('templates remain browsable and mobile navigation works', async ({ page }, testInfo) => {

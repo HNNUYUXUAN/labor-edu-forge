@@ -8,4 +8,4 @@
 6. 发布前运行 `npm run security:check`、`npm run security:history` 和 `npm run security:all`，分别检查当前分支、全部引用和完整本地对象库。发现历史凭证时先撤销/轮换，再处理历史和发布范围，见 [SECURITY.md](SECURITY.md) 与 [RELEASING.md](RELEASING.md)。
 7. E2E 使用预配置的 Chromium，保持固定运行时和 `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1`；版本不匹配时停止，不自动安装浏览器。依赖升级须验证类型、测试、构建和审计。
 
-视觉修改需保持真白底、墨黑正文、朱红主动作、克制钴蓝信息色、低圆角和编辑部式排版。
+视觉修改需保持真白底、墨黑正文、朱红主动作、克制钴蓝信息色、低圆角和编辑部式排版。中文优先宋体，西文与数字优先 Times New Roman；公式使用 KaTeX，不直接套用正文的字体覆盖数学字形。动画标注应在桌面和窄屏核对上下标、单位、受力颜色与边界。使用系统字体，不提交商业字体文件。

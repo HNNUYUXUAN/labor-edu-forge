@@ -11,7 +11,8 @@ This project depends on open source software. Runtime dependency licenses are ch
 | VueUse | Session storage and debounce composables | MIT |
 | Anime.js | Declarative animation timeline playback | MIT |
 | @lucide/vue | Interface icons | ISC |
-| Fontsource / Noto Sans SC / Noto Serif SC | Self-hosted fonts | MIT / OFL-1.1 |
+| Fontsource / Noto Serif SC | Self-hosted Chinese serif fallback | MIT / OFL-1.1 |
+| KaTeX | Local LaTeX rendering and mathematical fonts | MIT |
 | Express, cors, dotenv | HTTP service and configuration | MIT |
 | lowdb | Local JSON persistence | MIT |
 | openai-node | OpenAI-compatible provider client | Apache-2.0 |
@@ -19,3 +20,5 @@ This project depends on open source software. Runtime dependency licenses are ch
 | JSZip | ZIP archive generation | MIT OR GPL-3.0-or-later; this project uses the MIT option |
 
 Full license texts remain available in each installed package and its linked upstream repository.
+
+SimSun and Times New Roman are referenced as locally installed system fonts. Their font files are not redistributed by this repository.
