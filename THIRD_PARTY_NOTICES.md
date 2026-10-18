@@ -12,7 +12,8 @@ This project depends on open source software. Runtime dependency licenses are ch
 | Anime.js | Declarative animation timeline playback | MIT |
 | @lucide/vue | Interface icons | ISC |
 | Fontsource / Noto Serif SC | Self-hosted Chinese serif fallback | MIT / OFL-1.1 |
-| KaTeX | Local LaTeX rendering and mathematical fonts | MIT |
+| KaTeX | Local LaTeX rendering, mathematical fonts and MathML for Word equations | MIT |
+| @xmldom/xmldom | Parse generated MathML for native Word equation conversion | MIT |
 | Express, cors, dotenv | HTTP service and configuration | MIT |
 | lowdb | Local JSON persistence | MIT |
 | openai-node | OpenAI-compatible provider client | Apache-2.0 |

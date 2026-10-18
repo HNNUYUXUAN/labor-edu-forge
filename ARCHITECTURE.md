@@ -12,10 +12,10 @@ Express 提供固定的 `/api/health`、`/api/templates` 与 `/api/projects` 系
 
 播放器按绝对时间采样声明式动作。`move.params.x/y` 是相对初始位置的累计目标偏移，`duration` 以秒计，`easing=linear` 表示匀速；旧动作缺省时长为 1.2 秒。SVG 基准位置与动画偏移相加，旋转应用于形状局部坐标；暂停、拖动进度和重播共享同一采样逻辑。
 
-`MathText` 将正文中的 LaTeX 分隔符交给本地 KaTeX 渲染，其余内容由 Vue 转义。`SvgLabel` 通过 SVG `foreignObject` 复用同一排版，位置仍由物理采样计算。已有物理说明的普通文本记号只在显示层转换，不修改持久化数据与导出文本。渲染禁用可信 HTML/外部资源命令，限制宏展开和尺寸；解析失败保留文本。全局宋体/Times New Roman 字体栈不覆盖 KaTeX 的数学字形。
+`MathText` 将正文中的 LaTeX 分隔符交给本地 KaTeX 渲染，其余内容由 Vue 转义。`SvgLabel` 通过 SVG `foreignObject` 复用同一排版，位置仍由物理采样计算。共享 `tokenizeMathText` 识别显式 LaTeX 与已有案例中的物理记号，供页面和 Word 导出使用；持久化数据保留作者输入。渲染禁用可信 HTML/外部资源命令，限制宏展开和尺寸；解析失败保留文本。全局宋体/Times New Roman 字体栈不覆盖 KaTeX 的数学字形。
 
 杠杆称量使用 `lever` 参数，按准静态扶平调砣建模。载荷侧的扶平力补偿未平衡力矩，秤砣到达 `m物*l物/m砣` 的位置后扶平力归零；秤杆已调零，不模拟失衡自由摆动。滑轮使用 `pulley` 参数，支持定滑轮与一动一定滑轮组（上方定轮仅导向）。共享采样函数同时计算绳路、桶与绳端位置、轮转角和力：定滑轮 `F=mg,s=h`，动滑轮 `F=mg/2,s=2h`，理想情况下 `Fs=mgh`。SVG 的圆弧与直绳段由这些数值构造，绳长不随播放时间改变；渲染组件不接收模型提供的路径代码。
 
-导出服务用 `docx` 生成四份可编辑 Word，再由 JSZip 打包。E2E fixture 仅由 `server/src/e2e.ts` 显式启动，不进入生产入口，也不会在模型失败时被调用。
+导出服务用 `docx` 生成四份可编辑 Word，再由 JSZip 打包。`wordMath` 将 KaTeX 产生的 MathML 解析为 OMML 原生公式树，支持分式、上下标、根式、矩阵、括号和上下限；超出转换范围的内容保留源码文本。正文与公式文字显式设置宋体和 Times New Roman。文档采用 A4、2 cm 页边距、重复表头和整行分页，动画时间轴转为课堂可读的演示步骤。E2E fixture 仅由 `server/src/e2e.ts` 显式启动，不进入生产入口，也不会在模型失败时被调用。
 
 配置按进程变量、`.env.local`、`.env` 的优先级读取，路径相对服务端项目根目录。数据默认位于 `server/data/projects.json`；测试使用独立系统临时目录，E2E 不加载真实环境文件。前后端绑定回环地址；API 在解析请求体前检查 Host、Origin 和跨站标记，禁止缓存响应，并用统一 JSON 错误处理器脱敏异常。安全边界为本机单用户，不提供公网认证或租户隔离。

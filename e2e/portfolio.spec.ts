@@ -1,4 +1,6 @@
 import { expect, test } from '@playwright/test'
+import { readFile } from 'node:fs/promises'
+import JSZip from 'jszip'
 
 test('selecting a case copies all classroom settings without reactive clone errors', async ({ page }) => {
   const errors: string[] = []
@@ -55,6 +57,15 @@ test('three-step flow creates, edits and exports a project', async ({ page }, te
   await page.getByRole('button', { name: /导出备课包/ }).click()
   const download = await downloadPromise
   expect(download.suggestedFilename()).toContain('备课包')
+  const archive = await JSZip.loadAsync(await readFile((await download.path())!))
+  expect(Object.keys(archive.files)).toHaveLength(4)
+  const lesson = await JSZip.loadAsync(await archive.file('01_教学设计.docx')!.async('nodebuffer'))
+  const document = await lesson.file('word/document.xml')!.async('string')
+  expect(document).toContain('<m:oMath')
+  expect(document).not.toContain('\\(F=ma\\)')
+  expect(document).toContain('&lt;img src=x onerror=alert(1)&gt;')
+  expect(document).toContain('w:eastAsia="宋体"')
+  expect(document).toContain('w:ascii="Times New Roman"')
   await page.screenshot({ path: testInfo.outputPath('project-workbench.png'), fullPage: true })
 })
 

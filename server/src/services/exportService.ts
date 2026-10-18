@@ -8,29 +8,40 @@ import {
   Table,
   TableCell,
   TableRow,
-  TextRun,
   WidthType,
+  TableLayoutType,
 } from 'docx'
 import type { LessonProject } from '@labor-edu-forge/shared'
+import { documentFont, wordRuns } from './wordMath.js'
 
-const title = (text: string) => new Paragraph({ text, heading: HeadingLevel.TITLE, alignment: AlignmentType.CENTER })
-const heading = (text: string) => new Paragraph({ text, heading: HeadingLevel.HEADING_1 })
-const line = (text: string) => new Paragraph({ children: [new TextRun({ text, size: 22 })], spacing: { after: 120 } })
-const bullets = (items: string[]) => items.map((text) => new Paragraph({ text, bullet: { level: 0 }, spacing: { after: 80 } }))
-const cell = (text: string) => new TableCell({ children: [line(text)] })
+const title = (text: string) => new Paragraph({ children: wordRuns(text), heading: HeadingLevel.TITLE, alignment: AlignmentType.CENTER })
+const heading = (text: string) => new Paragraph({ children: wordRuns(text), heading: HeadingLevel.HEADING_1 })
+const line = (text: string, legacy = true, keepNext = false) => new Paragraph({ children: wordRuns(text, legacy), keepNext, spacing: { after: 100, line: 280 } })
+const bullets = (items: string[]) => items.map((text) => new Paragraph({ children: wordRuns(text), bullet: { level: 0 }, spacing: { after: 60, line: 280 } }))
+const cell = (text: string) => new TableCell({ margins: { top: 100, bottom: 100, left: 100, right: 100 }, children: [line(text)] })
 
 function documentWith(children: Array<Paragraph | Table>) {
-  return new Document({ sections: [{ properties: {}, children }] })
+  return new Document({
+    creator: '劳育备课工坊',
+    styles: { default: {
+      document: { run: { font: documentFont, size: 22, color: '000000', language: { value: 'en-US', eastAsia: 'zh-CN' } }, paragraph: { spacing: { line: 300, after: 120 } } },
+      title: { run: { font: documentFont, size: 36, bold: true, color: '000000' }, paragraph: { spacing: { after: 240 }, keepNext: true } },
+      heading1: { run: { font: documentFont, size: 26, bold: true, color: '000000' }, paragraph: { spacing: { before: 200, after: 100 }, keepNext: true } },
+    } },
+    sections: [{ properties: { page: { size: { width: 11906, height: 16838 }, margin: { top: 1134, bottom: 1134, left: 1134, right: 1134 } } }, children }],
+  })
 }
 
 async function lessonDesignDoc(project: LessonProject) {
   const lesson = project.lessonDesign
   const processTable = new Table({
     width: { size: 100, type: WidthType.PERCENTAGE },
+    layout: TableLayoutType.FIXED,
+    columnWidths: [1150, 750, 2600, 2600, 2538],
     rows: [
-      new TableRow({ children: ['教学环节', '时间', '教师活动', '学生活动', '设计意图'].map(cell) }),
-      ...lesson.teachingProcess.map((step) => new TableRow({ children: [
-        cell(step.stage), cell(`${step.minutes} 分钟`), cell(step.teacherActions.join('\n')),
+      new TableRow({ tableHeader: true, children: ['教学环节', '分钟', '教师活动', '学生活动', '设计意图'].map(cell) }),
+      ...lesson.teachingProcess.map((step) => new TableRow({ cantSplit: true, children: [
+        cell(step.stage), cell(`${step.minutes}`), cell(step.teacherActions.join('\n')),
         cell(step.studentActions.join('\n')), cell(step.intention),
       ] })),
     ],
@@ -55,7 +66,7 @@ async function taskSheetDoc(project: LessonProject) {
     title(task.title), heading('任务目标'), line(task.taskGoal),
     heading('课前准备'), ...bullets(task.preparation),
     heading('任务步骤'), ...task.steps.map((text, index) => line(`${index + 1}. ${text}`)),
-    heading('观察与记录'), ...task.recordPrompts.flatMap((item) => [line(item.label), line(`记录提示：${item.hint}`), line('________________________________________________________________')]),
+    heading('观察与记录'), ...task.recordPrompts.flatMap((item) => [line(item.label, true, true), line(`记录提示：${item.hint}`, true, true), line('________________________________________________________________')]),
     heading('反思问题'), ...bullets(task.reflectionQuestions),
   ]))
 }
@@ -66,9 +77,11 @@ async function rubricDoc(project: LessonProject) {
     title(rubric.title),
     new Table({
       width: { size: 100, type: WidthType.PERCENTAGE },
+      layout: TableLayoutType.FIXED,
+      columnWidths: [1500, 2712, 2713, 2713],
       rows: [
-        new TableRow({ children: ['评价维度', '表现优秀', '达到要求', '继续发展'].map(cell) }),
-        ...rubric.dimensions.map((item) => new TableRow({ children: [cell(item.dimension), cell(item.excellent), cell(item.competent), cell(item.developing)] })),
+        new TableRow({ tableHeader: true, children: ['评价维度', '表现优秀', '达到要求', '继续发展'].map(cell) }),
+        ...rubric.dimensions.map((item) => new TableRow({ cantSplit: true, children: [cell(item.dimension), cell(item.excellent), cell(item.competent), cell(item.developing)] })),
       ],
     }),
     heading('使用建议'), line('建议在活动前公开量规，活动中用于观察记录，活动后由学生自评、同伴互评与教师评价共同完成。'),
@@ -79,10 +92,14 @@ async function animationDoc(project: LessonProject) {
   const animation = project.animation
   return Packer.toBuffer(documentWith([
     title(animation.title),
-    heading('演示原理'), line(animation.principle),
-    heading('课堂使用提示'), line(animation.teacherTip),
-    heading('时间轴'), ...animation.timeline.map((item) => line(`${item.at} 秒：${item.targetId} · ${item.action} · ${JSON.stringify(item.params)}`)),
-    heading('字幕'), ...animation.captions.map((item) => line(`${item.at} 秒：${item.text}`)),
+    heading('演示原理'), line(animation.principle, true),
+    heading('课堂使用提示'), line(animation.teacherTip, true),
+    heading('演示步骤'), ...animation.timeline.map((item) => {
+      const label = animation.objects.find(object => object.id === item.targetId)?.label ?? item.targetId
+      const action = { move: '移动', rotate: '转动', highlight: '突出显示', appear: '出现', disappear: '隐藏', showText: '更新说明', fade: '调整显隐' }[item.action] ?? '演示'
+      return line(`${item.at} 秒：${label}开始${action}${item.duration ? `，持续 ${item.duration} 秒` : ''}。`, true)
+    }),
+    heading('字幕'), ...animation.captions.map((item) => line(`${item.at} 秒：${item.text}`, true)),
     heading('安全提示'), ...bullets(animation.safetyNotes),
   ]))
 }

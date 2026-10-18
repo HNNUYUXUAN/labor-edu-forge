@@ -1,6 +1,6 @@
 # README 展示素材
 
-这些素材来自本项目内置案例及备课引导页面，随项目按 Apache-2.0 发布，不含用户生成的备课内容、Key、私人端点或个人信息。
+这些素材展示本项目内置案例与备课引导页面，随项目按 Apache-2.0 发布。
 
 | 文件 | 来源 |
 |---|---|
@@ -24,4 +24,4 @@
 ffmpeg -framerate 10 -i frames/%03d.png -filter_complex "[0:v]split[a][b];[a]palettegen=stats_mode=diff[p];[b][p]paletteuse=dither=bayer:bayer_scale=3:diff_mode=rectangle" -loop 0 demo.gif
 ```
 
-这些 GIF 用于展示内置播放器，不代表一次真实模型生成结果。案例参数或播放器变化后应重新采集。
+这些 GIF 展示内置案例的默认参数与实际播放过程。案例参数或播放器变化后应重新采集。

@@ -213,3 +213,5 @@ export type RefineAnimationInput = z.infer<typeof refineAnimationInputSchema>
 
 export { buildInclinedPlaneAnimation, inclinedPlaneGeometry, isInclinedPlaneAnimation } from './inclinedPlane.js'
 export { buildLeverAnimation, buildPulleyAnimation, sampleLever, samplePulley, physicsKind, buildPhysicsAnimation } from './mechanics.js'
+
+export { tokenizeMathText, legacyPhysicsTex, type MathTextPart } from './mathNotation.js'
