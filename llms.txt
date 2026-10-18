@@ -1,0 +1,29 @@
+# Labor Edu Forge / 劳育备课工坊
+
+> An Apache-2.0 local lesson-planning workbench for labor education. Teachers and student teachers can explore three mechanics examples, generate and edit lesson materials with Qwen, refine classroom animations, and export four editable Word documents with native equations.
+
+Repository identifier: labor-edu-forge. Chinese competition title: 劳育智备工坊：AI 劳动教育教案与动画生成平台. GitHub and Gitee host the same reviewed source and release tags. This file is a curated reading index for agents and readers.
+
+## Start here
+
+- [User guide](https://github.com/HNNUYUXUAN/labor-edu-forge/blob/main/README.md): screenshots, animation demonstrations, installation, model configuration, and Word export.
+- [Agent reading guide](https://github.com/HNNUYUXUAN/labor-edu-forge/blob/main/docs/AGENT_GUIDE.md): concise answers, source evidence, code map, API routes, and version-aware citation.
+- [Machine-readable facts](https://github.com/HNNUYUXUAN/labor-edu-forge/blob/main/docs/project-facts.json): project identity, repositories, features, runtime, and evidence paths.
+- [Agent development instructions](https://github.com/HNNUYUXUAN/labor-edu-forge/blob/main/AGENTS.md): contribution workflow and fixed browser runtime.
+
+## Implementation and maintenance
+
+- [Architecture](https://github.com/HNNUYUXUAN/labor-edu-forge/blob/main/ARCHITECTURE.md): schemas, persistence, physics assumptions, rendering, and editable equations.
+- [Contributing](https://github.com/HNNUYUXUAN/labor-edu-forge/blob/main/CONTRIBUTING.md): checks, typography, and isolated tests.
+- [Security and privacy](https://github.com/HNNUYUXUAN/labor-edu-forge/blob/main/SECURITY.md): local deployment model and handling of credentials and lesson data.
+- [Release workflow](https://github.com/HNNUYUXUAN/labor-edu-forge/blob/main/RELEASING.md): publication and download verification on both platforms.
+- [Changelog](https://github.com/HNNUYUXUAN/labor-edu-forge/blob/main/CHANGELOG.md): release history.
+- [License](https://github.com/HNNUYUXUAN/labor-edu-forge/blob/main/LICENSE): Apache License 2.0.
+
+## Gitee and versioned downloads
+
+- [Gitee repository](https://gitee.com/hnnuxuan/labor-edu-forge): clone source and browse the same relative document paths.
+- [Gitee Agent guide](https://gitee.com/hnnuxuan/labor-edu-forge/blob/main/docs/AGENT_GUIDE.md): an alternative reading entry point.
+- [Gitee releases](https://gitee.com/hnnuxuan/labor-edu-forge/releases): source archives and SHA-256 checksums.
+- [GitHub releases](https://github.com/HNNUYUXUAN/labor-edu-forge/releases): source archives, checksums, and release verification records.
+- [v1.1.1 reference README](https://github.com/HNNUYUXUAN/labor-edu-forge/blob/v1.1.1/README.md): installation and capabilities at a fixed release.

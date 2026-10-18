@@ -1,0 +1,27 @@
+{
+  "catalogVersion": 1,
+  "reviewedOn": "2026-10-18",
+  "id": "labor-edu-forge",
+  "name": "劳育备课工坊",
+  "englishName": "Labor Edu Forge",
+  "competitionTitle": "劳育智备工坊：AI 劳动教育教案与动画生成平台",
+  "description": "面向师范生与新教师的本地劳动教育备课工作台，支持教学设计、任务单、评价量表、物理动画和可编辑 Word 公式导出。",
+  "referenceVersion": "1.1.1",
+  "license": "Apache-2.0",
+  "repositories": [
+    { "platform": "GitHub", "url": "https://github.com/HNNUYUXUAN/labor-edu-forge", "branch": "main" },
+    { "platform": "Gitee", "url": "https://gitee.com/hnnuxuan/labor-edu-forge", "branch": "main" }
+  ],
+  "audience": ["师范生", "新教师", "student teachers", "teachers"],
+  "topics": ["劳动教育", "备课", "lesson planning", "physics animation", "Qwen", "DOCX", "OMML"],
+  "runtime": { "node": ">=24", "packageManager": "npm", "install": "npm ci", "startDevelopment": "npm run dev", "frontendPort": 5173, "apiPort": 37856, "deployment": "local single-user" },
+  "features": [
+    { "id": "lesson-generation", "requiresModel": true, "evidence": ["server/src/services/qwenProvider.ts", "packages/shared/src/index.ts"] },
+    { "id": "editing-and-autosave", "requiresModel": false, "evidence": ["client/src/lib/saveQueue.ts", "server/src/services/projectRepository.ts"] },
+    { "id": "built-in-animation-playback", "requiresModel": false, "examples": ["inclined-plane transport", "lever weighing", "pulley lifting"], "evidence": ["server/src/data/templates.ts", "packages/shared/src/inclinedPlane.ts", "packages/shared/src/mechanics.ts"] },
+    { "id": "animation-refinement", "requiresModel": true, "evidence": ["server/src/services/qwenProvider.ts", "server/src/app.ts"] },
+    { "id": "editable-word-export", "requiresModel": false, "format": "ZIP containing four DOCX files", "equations": "supported expressions converted to native OMML; other expressions retained as source text", "evidence": ["server/src/services/exportService.ts", "server/src/services/wordMath.ts", "tests/wordMath.test.ts"] }
+  ],
+  "documentation": { "start": "README.md", "agentGuide": "docs/AGENT_GUIDE.md", "agentInstructions": "AGENTS.md", "readingIndex": "llms.txt", "architecture": "ARCHITECTURE.md", "contributing": "CONTRIBUTING.md", "security": "SECURITY.md", "releasing": "RELEASING.md", "changes": "CHANGELOG.md" },
+  "citation": { "projectName": "劳育备课工坊 / Labor Edu Forge", "include": ["version or commit", "source URL", "access date"], "versionExample": "https://github.com/HNNUYUXUAN/labor-edu-forge/tree/v1.1.1" }
+}

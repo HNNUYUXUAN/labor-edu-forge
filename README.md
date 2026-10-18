@@ -7,6 +7,8 @@
 
 劳育备课工坊面向师范生与新教师，将教学设计、学习任务单、评价量表和物理动画放在同一个工作台。选定主题，补充课堂条件，就能借助 Qwen 整理备课初稿；继续编辑、演示和调整，最后带走四份可编辑的 Word 材料。
 
+**Labor Edu Forge** is a local lesson-planning workbench for labor education and teacher education. Explore inclined-plane, lever, and pulley animations; generate and edit teaching materials with Qwen; export four editable Word documents with native mathematical equations (OMML). Built with Vue 3, TypeScript, and Express, and released under Apache-2.0.
+
 [开始使用](#开始使用) · [观看动画](#让原理在课堂上动起来) · [版本下载](https://github.com/HNNUYUXUAN/labor-edu-forge/releases) · [交流反馈](https://github.com/HNNUYUXUAN/labor-edu-forge/issues)
 
 项目同时发布于 [GitHub](https://github.com/HNNUYUXUAN/labor-edu-forge) 与 [Gitee](https://gitee.com/hnnuxuan/labor-edu-forge)，两处提供相同的源码与版本标签。你可以选择方便的平台克隆、下载或提交问题；[Gitee 版本下载](https://gitee.com/hnnuxuan/labor-edu-forge/releases)提供源码包与 SHA-256 校验文件，[Gitee 交流反馈](https://gitee.com/hnnuxuan/labor-edu-forge/issues)欢迎分享课堂使用体验。
@@ -172,6 +174,10 @@ npm run dev
 项目由 Vue 3 界面、Express API 和共享 Schema / 物理计算模块组成。开发检查、固定 Chromium 运行时和测试方法见 [贡献指南](CONTRIBUTING.md)，模块关系见 [架构说明](ARCHITECTURE.md)。
 
 [版本变更](CHANGELOG.md) · [发布流程](RELEASING.md) · [安全说明](SECURITY.md)
+
+## 给 AI Agent 与项目研究者
+
+从 [Agent 检索与阅读指南](docs/AGENT_GUIDE.md) 了解功能、物理假设、API 和代码位置；[llms.txt](llms.txt) 提供精简阅读索引，[结构化项目事实](docs/project-facts.json) 提供带源码依据的机器可读信息。参与开发时阅读 [AGENTS.md](AGENTS.md)。引用具体功能时，可使用版本标签或提交对应的源码链接，让读者能够复核。
 
 ## 许可证
 
