@@ -7,12 +7,19 @@ import { describe, expect, it } from 'vitest'
 const root = process.cwd()
 describe('release safeguards', () => {
   it('ignores environment variants, nested generated data and report artifacts', () => {
+    const dir = mkdtempSync(path.join(tmpdir(), 'labor-edu-ignore-'))
     const privateFiles = ['server/.env.production', 'client/.env.development.local', 'server/data/backup/snapshot.json', 'server/server/data/projects.json', '.playwright-cli/snapshot.yml', 'exports/lesson.zip']
-    for (const name of privateFiles) {
-      const result = spawnSync('git', ['check-ignore', '--no-index', name], {cwd:root})
-      expect(result.status, `${name}: ${result.stderr.toString()}`).toBe(0)
-    }
-    expect(spawnSync('git', ['check-ignore', '--no-index', 'server/.env.example'], {cwd:root}).status).toBe(1)
+    try {
+      execFileSync('git', ['init', '-q'], {cwd:dir, stdio:'pipe'})
+      writeFileSync(path.join(dir, '.gitignore'), readFileSync(path.join(root, '.gitignore')))
+      for (const name of privateFiles) {
+        const result = spawnSync('git', ['check-ignore', '--no-index', name], {cwd:dir})
+        expect(result.status, `${name}: ${result.stderr.toString()}`).toBe(0)
+      }
+      for (const name of ['server/.env.example', 'server/data/.gitkeep']) {
+        expect(spawnSync('git', ['check-ignore', '--no-index', name], {cwd:dir}).status).toBe(1)
+      }
+    } finally { rmSync(dir, {recursive:true,force:true}) }
   })
 
   it('detects a removed historical credential without printing its value', () => {

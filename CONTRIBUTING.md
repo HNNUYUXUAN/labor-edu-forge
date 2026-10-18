@@ -12,6 +12,8 @@
 
 ## 检查与测试
 
+从 Release ZIP 开始时，可在解压后的项目根目录依次运行 `npm run typecheck`、`npm test`、`npm run build`、`npm run license:check` 和 `npm audit`，检查源码与依赖。`npm test` 的安全测试使用临时 Git 仓库，需要安装 Git；日常启动和备课只需 Node.js 与 npm。准备提交贡献时，使用 Git 克隆仓库，再运行下方包含历史扫描的完整检查。
+
 ```powershell
 npm run check
 npm run license:check

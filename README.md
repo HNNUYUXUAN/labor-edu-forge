@@ -56,16 +56,29 @@
 
 ## 开始使用
 
-准备 Node.js 24+、npm 和 Git，在终端运行：
+准备 **Node.js 24+ 和 npm**，选择一种方式获取源码。
+
+**下载版本包：** 在 [Releases](https://github.com/HNNUYUXUAN/labor-edu-forge/releases) 下载 `labor-edu-forge-v1.1.0-source.zip`，解压后进入其中的 `labor-edu-forge` 文件夹。这个目录应同时包含 `package.json`、`client`、`server` 和 `packages`，直接在此处打开终端；使用 ZIP 时只需 Node.js 和 npm。
+
+也可以下载同一 Release 的 `SHA256SUMS.txt`，用 PowerShell 的 `Get-FileHash .\labor-edu-forge-v1.1.0-source.zip -Algorithm SHA256` 核对文件完整性。
+
+**使用 Git：** 安装 Git 后运行：
 
 ```powershell
 git clone https://github.com/HNNUYUXUAN/labor-edu-forge.git
 cd labor-edu-forge
+```
+
+两种方式都在项目根目录执行：
+
+```powershell
 npm ci
 npm run dev
 ```
 
 打开 [本地工作台](http://localhost:5173)。安装和启动命令会自动构建共享包，API 默认运行于 `http://127.0.0.1:37856`。也可用 `environment.yml` 创建 `labor-edu-forge-dev` Conda 环境。
+
+保持这个终端运行，它会同时启动前后端。退出时按 `Ctrl+C`；下次进入同一目录运行 `npm run dev` 即可。更换版本或更新依赖后，再执行一次 `npm ci`。
 
 1. **体验一节课。** 打开「案例模板」，选择斜面、杠杆或滑轮，浏览材料并播放动画。内置案例可在配置模型前体验。
 2. **准备自己的课。** 完成下方模型配置，点击「基于案例备课」或「新建备课」，依次填写主题、课堂设置与教学重点。
