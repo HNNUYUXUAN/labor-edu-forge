@@ -10,7 +10,7 @@ describe('release safeguards', () => {
     const privateFiles = ['server/.env.production', 'client/.env.development.local', 'server/data/backup/snapshot.json', 'server/server/data/projects.json', '.playwright-cli/snapshot.yml', 'exports/lesson.zip']
     for (const name of privateFiles) {
       const result = spawnSync('git', ['check-ignore', '--no-index', name], {cwd:root})
-      expect(result.status, name).toBe(0)
+      expect(result.status, `${name}: ${result.stderr.toString()}`).toBe(0)
     }
     expect(spawnSync('git', ['check-ignore', '--no-index', 'server/.env.example'], {cwd:root}).status).toBe(1)
   })
