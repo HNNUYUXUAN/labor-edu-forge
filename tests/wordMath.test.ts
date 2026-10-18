@@ -26,9 +26,10 @@ describe('editable Word equations', () => {
 
   it('preserves mixed text and malformed formulas, bounds macro expansion and escapes XML', async () => {
     expect(() => nativeEquation(String.raw`\def\a{\a}\a`)).toThrow()
-    const { xml, dom } = await xmlOf(await Packer.toBuffer(new Document({ sections: [{ children: [new Paragraph({ children: wordRuns(String.raw`中文 A12 \(F=ma\) <script> \(\unknown{x}\)`) })] }] })))
+    const { xml, dom } = await xmlOf(await Packer.toBuffer(new Document({ sections: [{ children: [new Paragraph({ children: wordRuns(String.raw`中文 A12 \(F=ma\) <script> <img src=x onerror=alert(1)> \(\unknown{x}\)`) })] }] })))
     expect(dom.getElementsByTagNameNS(mathNS, 'oMath')).toHaveLength(1)
     expect(xml).toContain('&lt;script&gt;')
+    expect(xml).toContain('&lt;img src=x onerror=alert(1)&gt;')
     expect(xml).toContain('\\unknown{x}')
     expect(dom.documentElement.tagName).toBe('w:document')
   })

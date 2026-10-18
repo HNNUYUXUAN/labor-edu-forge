@@ -21,6 +21,9 @@ function plainParts(text: string, legacy: boolean): MathTextPart[] {
   const result: MathTextPart[] = []
   let end = 0
   for (const match of text.matchAll(pattern)) {
+    // Compatibility applies to known physics symbols, not prose or code assignments.
+    const words = match[0].match(/[A-Za-z]+/g) ?? []
+    if (match[0].includes('=') && words.some(word => !/^(?:F|N|T|R|f|m|g|s|h|l|mg|ma|Fs|mgh|sin|cos|kg)$/.test(word))) continue
     result.push({ text: text.slice(end, match.index) }, mathPart(legacyPhysicsTex(match[0])), { text: match[0].match(/\s+$/)?.[0] ?? '' })
     end = match.index + match[0].length
   }
