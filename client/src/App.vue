@@ -13,7 +13,7 @@
       <section v-if="sidebarItems.length" class="sidebar-index">
         <header><span>{{ showingTemplates ? '精选案例' : '我的项目' }}</span><RouterLink to="/new" aria-label="新建备课"><Plus :size="20" /></RouterLink></header>
         <RouterLink v-for="item in sidebarItems" :key="item.id" :to="`${showingTemplates ? '/templates' : '/projects'}/${item.id}`" class="sidebar-index-item">
-          <FileText :size="21" /><span><strong>{{ item.title }}</strong><small>{{ item.gradeLevel }} · {{ item.durationMinutes }} 分钟</small></span>
+          <FileText :size="21" /><span><strong :title="item.title">{{ item.title }}</strong><small>{{ item.gradeLevel }} · {{ item.durationMinutes }} 分钟</small></span>
         </RouterLink>
       </section>
       <div class="sidebar-spacer" />
@@ -21,7 +21,7 @@
     </aside>
     <header class="mobile-header">
       <RouterLink class="brand" to="/new"><span class="brand-mark">劳</span><span>劳育备课工坊</span></RouterLink>
-      <button aria-label="打开导航" @click="mobileOpen = !mobileOpen"><Menu :size="24" /></button>
+      <button :aria-label="mobileOpen ? '关闭导航' : '打开导航'" :aria-expanded="mobileOpen" @click="mobileOpen = !mobileOpen"><Menu :size="24" /></button>
     </header>
     <nav v-if="mobileOpen" class="mobile-nav">
       <RouterLink to="/new" @click="mobileOpen = false">新建备课</RouterLink>
@@ -44,12 +44,16 @@ const route = useRoute()
 const showingTemplates = computed(() => route.path.startsWith('/templates'))
 const sidebarItems = ref<Array<{ id: string; title: string; gradeLevel: string; durationMinutes: number }>>([])
 
-watch(() => route.fullPath, async () => {
+watch(() => route.fullPath, async (_path, _old, onCleanup) => {
+  let active = true
+  onCleanup(()=>{ active=false })
+  mobileOpen.value = false
   if (showingTemplates.value) {
     const templates = await listTemplates().catch(() => [])
-    sidebarItems.value = templates.map((item) => ({ id: item.id, title: item.title, gradeLevel: item.input.gradeLevel, durationMinutes: item.input.durationMinutes }))
+    if (active) sidebarItems.value = templates.map((item) => ({ id: item.id, title: item.title, gradeLevel: item.input.gradeLevel, durationMinutes: item.input.durationMinutes }))
   } else if (route.path.startsWith('/projects')) {
-    sidebarItems.value = await listProjects().catch(() => [])
+    const items = await listProjects().catch(() => [])
+    if (active) sidebarItems.value = items
   } else sidebarItems.value = []
 }, { immediate: true })
 </script>

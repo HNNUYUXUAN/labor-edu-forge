@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import JSZip from 'jszip'
 import request from 'supertest'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import { createApp } from '../server/src/app.js'
 import { lessonTemplates } from '../server/src/data/templates.js'
 import { resetRepositoryForTests } from '../server/src/services/projectRepository.js'
@@ -27,7 +27,7 @@ afterAll(async () => {
 describe('portfolio API', () => {
   it('reports provider state without leaking credentials', async () => {
     const response = await request(createApp()).get('/api/health').expect(200)
-    expect(response.body).toEqual({ status: 'ok', providerReady: false, model: 'qwen-plus' })
+    expect(response.body).toEqual({ status: 'ok', providerReady: false, model: 'qwen3.7-plus' })
     expect(JSON.stringify(response.body)).not.toContain('apiKey')
   })
 
@@ -93,5 +93,26 @@ describe('portfolio API', () => {
       const documentZip = await JSZip.loadAsync(await file.async('nodebuffer'))
       expect(documentZip.file('word/document.xml')).not.toBeNull()
     }
+  })
+
+  it('advances the revision even if the clock is behind the last save', async () => {
+    const app = createApp()
+    const project = (await request(app).get(`/api/projects/${projectId}`)).body
+    const clock = vi.spyOn(Date, 'now').mockReturnValue(Date.parse(project.updatedAt) - 1000)
+    try {
+      const saved = await request(app).patch(`/api/projects/${projectId}`).send({section:'lessonDesign',value:project.lessonDesign,expectedUpdatedAt:project.updatedAt}).expect(200)
+      expect(Date.parse(saved.body.updatedAt)).toBeGreaterThan(Date.parse(project.updatedAt))
+      await request(app).patch(`/api/projects/${projectId}`).send({section:'lessonDesign',value:project.lessonDesign,expectedUpdatedAt:project.updatedAt}).expect(409)
+    } finally { clock.mockRestore() }
+  })
+
+  it('reports a conflict if another edit arrives while animation refinement is running', async () => {
+    const project = (await request(createApp()).get(`/api/projects/${projectId}`)).body
+    const app = createApp({ refineSpec: async animation => {
+      await request(createApp()).patch(`/api/projects/${projectId}`).send({section:'lessonDesign',value:project.lessonDesign,expectedUpdatedAt:project.updatedAt}).expect(200)
+      return animation
+    } })
+    const response = await request(app).post(`/api/projects/${projectId}/animation/refine`).send({instruction:'放慢演示动作',expectedUpdatedAt:project.updatedAt}).expect(409)
+    expect(response.body.error).toBe('PROJECT_CONFLICT')
   })
 })

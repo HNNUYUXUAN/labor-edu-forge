@@ -1,5 +1,25 @@
 import { expect, test } from '@playwright/test'
 
+test('selecting a case copies all classroom settings without reactive clone errors', async ({ page }) => {
+  const errors: string[] = []
+  page.on('pageerror', error => errors.push(error.message))
+  await page.goto('/new')
+  const templates = await (await page.request.get('/api/templates')).json()
+  for (const template of templates) {
+    await page.getByRole('button', { name: new RegExp(`^${template.title}`) }).click()
+    await expect(page.getByLabel('劳动场景', { exact: true })).toHaveValue(template.input.scenario)
+    await page.getByRole('button', { name: /下一步：设置课堂/ }).click()
+    for (const point of template.input.knowledgePoints) {
+      await expect(page.getByRole('button', { name: `删除${point}`, exact: true })).toBeVisible()
+    }
+    await expect(page.locator('.tag-input .tag')).toHaveCount(template.input.knowledgePoints.length)
+    const draft = await page.evaluate(() => JSON.parse(sessionStorage.getItem('labor-edu-forge:new-project')!))
+    expect(draft).toEqual(template.input)
+    await page.getByRole('button', { name: /01 选择主题/ }).click()
+  }
+  expect(errors).toEqual([])
+})
+
 test('three-step flow creates, edits and exports a project', async ({ page }, testInfo) => {
   await page.goto('/new')
   await expect(page.getByRole('heading', { name: '从一个真实劳动场景开始' })).toBeVisible()
@@ -20,7 +40,7 @@ test('three-step flow creates, edits and exports a project', async ({ page }, te
   await objectives.fill('理解斜面省力原理\n能够安全完成合作搬运')
   await expect(page.getByText('已保存')).toBeVisible({ timeout: 5_000 })
   const downloadPromise = page.waitForEvent('download')
-  await page.getByRole('link', { name: /导出备课包/ }).click()
+  await page.getByRole('button', { name: /导出备课包/ }).click()
   const download = await downloadPromise
   expect(download.suggestedFilename()).toContain('备课包')
   await page.screenshot({ path: testInfo.outputPath('project-workbench.png'), fullPage: true })

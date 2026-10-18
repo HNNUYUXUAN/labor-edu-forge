@@ -1,4 +1,4 @@
-import { lessonTemplateSchema, type LessonTemplate } from '@labor-edu-forge/shared'
+import { buildPhysicsAnimation, lessonTemplateSchema, type LessonTemplate } from '@labor-edu-forge/shared'
 
 type TemplateSeed = {
   id: string
@@ -19,7 +19,7 @@ type TemplateSeed = {
 
 function buildTemplate(seed: TemplateSeed): LessonTemplate {
   const practiceMinutes = seed.durationMinutes - 20
-  return lessonTemplateSchema.parse({
+  const template = lessonTemplateSchema.parse({
     id: seed.id,
     title: seed.title,
     summary: seed.summary,
@@ -118,6 +118,8 @@ function buildTemplate(seed: TemplateSeed): LessonTemplate {
       },
     },
   })
+  template.content.animation = buildPhysicsAnimation(template.content.animation)
+  return template
 }
 
 export const lessonTemplates: LessonTemplate[] = [

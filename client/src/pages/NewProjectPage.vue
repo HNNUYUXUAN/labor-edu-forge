@@ -1,13 +1,17 @@
 <template>
   <section class="wizard-page">
     <header class="stepper" aria-label="备课步骤">
-      <button v-for="item in steps" :key="item.number" :class="{ active: step === item.number, done: step > item.number }" @click="goToStep(item.number)">
+      <button v-for="item in steps" :key="item.number" :class="{ active: step === item.number, done: step > item.number }" :disabled="submitting" :aria-current="step === item.number ? 'step' : undefined" @click="goToStep(item.number)">
         <span>{{ String(item.number).padStart(2, '0') }}</span>{{ item.label }}
       </button>
     </header>
 
+    <div v-if="loadingSetup" class="feedback-banner" role="status">正在检查本机服务…</div>
+    <div v-else-if="setupError" class="feedback-banner error-text" role="alert"><p>{{ setupError }}</p><button class="text-button" @click="loadSetup">重新连接</button></div>
+    <div v-else-if="health && !health.providerReady" class="feedback-banner"><p>尚未配置生成服务。可以先浏览完整案例和动画，也可以继续填写备课信息。</p><RouterLink to="/templates">先看案例</RouterLink> · <RouterLink to="/guide">查看配置方法</RouterLink> · <button class="text-button" @click="loadSetup">重新检查</button></div>
     <div class="wizard-layout">
       <form class="wizard-form" @submit.prevent="submit">
+        <fieldset class="wizard-fields" :disabled="submitting">
         <div v-if="step === 1" class="step-view">
           <h1>从一个真实劳动场景开始</h1>
           <p class="lead">选择一个案例作为起点，或描述你想带学生完成的劳动任务。</p>
@@ -36,7 +40,7 @@
                 <span v-for="point in knowledgePoints" :key="point" class="tag">{{ point }}<button type="button" :aria-label="`删除${point}`" @click="removeKnowledge(point)"><X :size="15" /></button></span>
                 <input id="knowledge" v-model="knowledgeDraft" :disabled="knowledgePoints.length >= 3" placeholder="输入后按回车" @focus="knowledgeFocused = true" @blur="knowledgeFocused = false" @keydown.enter.prevent="addKnowledge" />
               </div>
-              <small>控制在 1—3 个核心知识点</small>
+              <small>控制在 1—3 个核心知识点；点击下一步也会加入输入框中的内容</small><p v-if="errors.knowledge" class="error-text" role="alert">{{ errors.knowledge }}</p>
             </div></div>
           </div>
         </div>
@@ -53,15 +57,18 @@
           </div>
           <label class="field-label" for="requirements">补充教学要求（可选）</label>
           <textarea id="requirements" v-model="requirements" maxlength="200" rows="4" placeholder="例如：希望学生完成一次小组测量，并用数据解释哪种搬运方式更省力" />
-          <div class="field-meta"><span class="error-text">{{ submitError }}</span><span>{{ requirements.length }}/200</span></div>
+          <div class="field-meta"><span>已选 {{ focuses.length }} 项重点，至少选择 2 项</span><span>{{ requirements.length }}/200</span></div>
         </div>
 
+        </fieldset>
+        <p v-if="submitError" class="feedback-banner error-text" role="alert">{{ submitError }}</p>
+        <p v-if="submitting" class="feedback-banner" role="status">正在生成四份课堂材料，可能需要数分钟。请保持页面打开，无需重复提交。<span aria-hidden="true"> 已等待 {{ elapsed }} 秒。</span></p>
         <footer class="wizard-footer">
           <span>第 {{ step }} 步，共 3 步</span>
           <div>
-            <button type="button" class="button secondary" :disabled="step === 1" @click="step--">上一步</button>
+            <button type="button" class="button secondary" :disabled="step === 1 || submitting" @click="step--">上一步</button>
             <button v-if="step < 3" type="button" class="button primary" @click="nextStep">下一步：{{ step === 1 ? '设置课堂' : '教学重点' }}<ArrowRight :size="22" /></button>
-            <button v-else class="button primary" :disabled="submitting || !health?.providerReady" type="submit">{{ submitting ? '正在生成…' : '生成备课包' }}<ArrowRight :size="22" /></button>
+            <button v-else class="button primary" :disabled="submitting || loadingSetup || !health?.providerReady || focuses.length < 2" type="submit">{{ submitting ? '正在生成…' : '生成备课包' }}<ArrowRight :size="22" /></button>
           </div>
         </footer>
       </form>
@@ -76,8 +83,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, watch } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import { onBeforeRouteLeave, onBeforeRouteUpdate, useRouter, useRoute } from 'vue-router'
 import { useForm } from 'vee-validate'
 import { CheckboxIndicator, CheckboxRoot } from 'reka-ui'
 import { useSessionStorage } from '@vueuse/core'
@@ -92,8 +99,13 @@ const step = ref(1)
 const templates = ref<Array<Omit<LessonTemplate, 'content'>>>([])
 const health = ref<HealthStatus | null>(null)
 const submitting = ref(false)
+const completing = ref(false)
+const elapsed = ref(0)
+let elapsedTimer: ReturnType<typeof setInterval> | undefined
+const loadingSetup = ref(true)
+const setupError = ref('')
 const submitError = ref('')
-const errors = reactive({ scenario: '' })
+const errors = reactive({ scenario: '', knowledge: '' })
 const knowledgeDraft = ref('')
 const knowledgeFocused = ref(false)
 
@@ -131,16 +143,18 @@ watch(values, (current) => {
 }, { deep: true, flush: 'sync' })
 
 function selectTemplate(template: Omit<LessonTemplate, 'content'>) {
-  for (const [key, value] of Object.entries(template.input)) setFieldValue(key as keyof CreateProjectInput, structuredClone(value) as never)
+  const input = JSON.parse(JSON.stringify(template.input)) as CreateProjectInput
+  for (const [key, value] of Object.entries(input)) setFieldValue(key as keyof CreateProjectInput, value as never)
 }
 function clearTemplateIfChanged() {
-  if (!templateId.value) return
   templateId.value = undefined
   topic.value = scenario.value.trim().slice(0, 16) || '自定义劳动课'
 }
 function removeKnowledge(point: string) { knowledgePoints.value = knowledgePoints.value.filter((item) => item !== point) }
 function addKnowledge() {
+  errors.knowledge = ''
   const value = knowledgeDraft.value.trim()
+  if (value.length > 200) { errors.knowledge = '每个知识点请控制在 200 字以内。'; return }
   if (value && knowledgePoints.value.length < 3 && !knowledgePoints.value.includes(value)) knowledgePoints.value = [...knowledgePoints.value, value]
   knowledgeDraft.value = ''
 }
@@ -155,7 +169,11 @@ async function nextStep() {
     if (!result.success) return
     if (!topic.value) topic.value = scenario.value.slice(0, 16)
   }
-  if (step.value === 2 && knowledgePoints.value.length === 0) return
+  if (step.value === 2) {
+    addKnowledge()
+    if (errors.knowledge) return
+    if (knowledgePoints.value.length === 0) { errors.knowledge = '请至少添加一个知识点，再继续下一步。'; return }
+  }
   step.value++
 }
 function goToStep(target: number) { if (target <= step.value) step.value = target }
@@ -165,19 +183,47 @@ const submit = handleSubmit(async (payload) => {
   if (!health.value?.providerReady) return
   const validPayload = createProjectInputSchema.safeParse(payload)
   if (!validPayload.success) { submitError.value = validPayload.error.issues[0]?.message || '请检查备课信息。'; return }
-  submitting.value = true
+  submitting.value = true; elapsed.value = 0
+  const started = Date.now()
+  elapsedTimer = setInterval(()=>{ elapsed.value = Math.floor((Date.now()-started)/1000) }, 1000)
   try {
     const project = await createProject(validPayload.data)
     sessionDraft.value = defaultInput
+    completing.value = true
     await router.push(`/projects/${project.id}`)
   } catch (error) {
     submitError.value = error instanceof Error ? error.message : '生成失败，请稍后重试。'
-  } finally { submitting.value = false }
+  } finally { submitting.value = false; completing.value = false; clearInterval(elapsedTimer) }
 })
 
-onMounted(async () => {
-  ;[templates.value, health.value] = await Promise.all([listTemplates(), getHealth()])
-  const selected = typeof route.query.template === 'string' ? templates.value.find((item) => item.id === route.query.template) : undefined
-  if (selected) selectTemplate(selected)
-})
+let selectedQuery: string | undefined
+function applySelectedTemplate() {
+  const id = typeof route.query.template === 'string' ? route.query.template : undefined
+  const selected = templates.value.find(item=>item.id===id)
+  if (selected && id !== selectedQuery) { selectTemplate(selected); selectedQuery = id }
+}
+async function loadSetup() {
+  loadingSetup.value = true; setupError.value = ''
+  const [cases, status] = await Promise.allSettled([listTemplates(), getHealth()])
+  if (cases.status === 'fulfilled') templates.value = cases.value
+  if (status.status === 'fulfilled') health.value = status.value
+  else health.value = null
+  if (cases.status === 'rejected' || status.status === 'rejected') setupError.value = '本机服务暂时无法连接。填写内容会保留，请启动服务后重新连接。'
+  loadingSetup.value = false
+  applySelectedTemplate()
+}
+watch(()=>route.query.template, applySelectedTemplate)
+onMounted(loadSetup)
+function canLeave() {
+  if (!submitting.value || completing.value) return true
+  submitError.value = '备课仍在生成，请等待完成后再离开，以免错过结果。'
+  return false
+}
+onBeforeRouteLeave(canLeave)
+onBeforeRouteUpdate(canLeave)
+function beforeUnload(event: BeforeUnloadEvent) {
+  if (submitting.value) { event.preventDefault(); event.returnValue = '' }
+}
+window.addEventListener('beforeunload', beforeUnload)
+onBeforeUnmount(()=>{ clearInterval(elapsedTimer); window.removeEventListener('beforeunload', beforeUnload) })
 </script>

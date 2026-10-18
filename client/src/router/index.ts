@@ -5,6 +5,7 @@ import ProjectPage from '../pages/ProjectPage.vue'
 import TemplatesPage from '../pages/TemplatesPage.vue'
 import TemplatePage from '../pages/TemplatePage.vue'
 import GuidePage from '../pages/GuidePage.vue'
+import NotFoundPage from '../pages/NotFoundPage.vue'
 
 export default createRouter({
   history: createWebHistory(),
@@ -17,5 +18,6 @@ export default createRouter({
     { path: '/templates', name: 'templates', component: TemplatesPage },
     { path: '/templates/:id', name: 'template', component: TemplatePage },
     { path: '/guide', name: 'guide', component: GuidePage },
+    { path: '/:pathMatch(.*)*', component: NotFoundPage },
   ],
 })

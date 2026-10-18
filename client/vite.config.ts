@@ -11,11 +11,16 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    strictPort: true,
+    fs: { deny: ['.env', '.env.*', '**/*.pem', '**/*.key', '**/.git/**', '**/server/data/**', '**/server/server/data/**', '**/output/**'] },
     proxy: {
       '/api': {
-        target: process.env.VITE_API_TARGET || 'http://localhost:37856',
+        target: process.env.VITE_API_TARGET || 'http://127.0.0.1:37856',
         changeOrigin: true,
       },
     },
+  },
+  preview: {
+    proxy: { '/api': { target: process.env.VITE_API_TARGET || 'http://127.0.0.1:37856', changeOrigin: true } },
   },
 })

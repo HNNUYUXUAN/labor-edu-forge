@@ -1,6 +1,8 @@
 import { randomUUID } from 'node:crypto'
 import cors from 'cors'
 import express from 'express'
+import type { ErrorRequestHandler } from 'express'
+import { localAccess } from './lib/localAccess.js'
 import {
   createProjectInputSchema,
   refineAnimationInputSchema,
@@ -53,7 +55,8 @@ export function createApp(overrides: Partial<AppServices> = {}) {
   }
   const app = express()
   app.disable('x-powered-by')
-  app.use(cors())
+  app.use(localAccess)
+  app.use(cors({ origin: true }))
   app.use(express.json({ limit: '256kb' }))
 
   app.get('/api/health', (_request, response) => {
@@ -118,6 +121,7 @@ export function createApp(overrides: Partial<AppServices> = {}) {
       const updated = await replaceAnimation(project.id, animation, input.data.expectedUpdatedAt)
       response.json(updated)
     } catch (error) {
+      if (error instanceof ProjectConflictError) return response.status(409).json({ error: 'PROJECT_CONFLICT', message: '优化期间，另一页面已更新这份备课。请刷新核对后再试，已有内容未被覆盖。' })
       if (error instanceof ProviderNotConfiguredError) return response.status(503).json({ error: 'PROVIDER_NOT_CONFIGURED', message: '当前本地服务未配置百炼密钥，不能优化动画。' })
       response.status(502).json({ error: 'PROVIDER_FAILED', message: providerMessage(error) })
     }
@@ -133,5 +137,11 @@ export function createApp(overrides: Partial<AppServices> = {}) {
   })
 
   app.use((_request, response) => response.status(404).json({ error: 'NOT_FOUND', message: '接口不存在。' }))
+  const handleError: ErrorRequestHandler = (error, _request, response, _next) => {
+    // Never return Express development stacks, JSON bodies, local paths or upstream details.
+    const status = error?.type === 'entity.too.large' ? 413 : error?.type === 'entity.parse.failed' ? 400 : 500
+    response.status(status).json({ error: status === 500 ? 'INTERNAL_ERROR' : 'INVALID_REQUEST', message: status === 500 ? '服务暂时无法处理请求。' : '请求格式不正确或内容过大。' })
+  }
+  app.use(handleError)
   return app
 }

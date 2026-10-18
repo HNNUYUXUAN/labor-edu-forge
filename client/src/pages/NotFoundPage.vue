@@ -1,0 +1,1 @@
+<template><section class="empty-state full"><h1>这个页面不存在</h1><p>可以回到备课列表，继续之前的工作。</p><RouterLink class="button primary" to="/projects">查看我的备课</RouterLink><RouterLink to="/templates">浏览案例模板</RouterLink></section></template>

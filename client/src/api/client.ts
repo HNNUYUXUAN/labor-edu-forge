@@ -17,12 +17,12 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(path, {
     ...init,
     headers: init?.body ? { 'Content-Type': 'application/json', ...init.headers } : init?.headers,
-  })
+  }).catch(() => { throw new ApiError(0, 'NETWORK_UNAVAILABLE', '无法连接本机服务，请确认服务已启动后重试。') })
   if (!response.ok) {
     const payload = await response.json().catch(() => ({})) as { error?: string; message?: string; details?: string[] }
     throw new ApiError(response.status, payload.error || 'REQUEST_FAILED', payload.message || payload.details?.[0] || '请求失败，请稍后重试。')
   }
-  return response.json() as Promise<T>
+  return response.json().catch(() => { throw new ApiError(response.status, 'INVALID_RESPONSE', '服务返回的内容暂时无法读取，请重试。') }) as Promise<T>
 }
 
 export type HealthStatus = { status: 'ok'; providerReady: boolean; model: string }

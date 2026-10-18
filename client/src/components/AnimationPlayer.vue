@@ -1,89 +1,85 @@
 <template>
   <div class="animation-player">
-    <div ref="stage" class="animation-stage" :style="{ background: spec.canvas.background }">
-      <svg :viewBox="`0 0 ${spec.canvas.width} ${spec.canvas.height}`" role="img" :aria-label="spec.title">
-        <g v-if="spec.sceneType === 'inclined-plane'" class="diagram-annotations" aria-hidden="true">
-          <line x1="160" y1="410" x2="785" y2="410" stroke="#9CA0A5" stroke-width="2" stroke-dasharray="10 9" />
-          <line x1="160" y1="410" x2="160" y2="195" stroke="#9CA0A5" stroke-width="2" stroke-dasharray="10 9" />
-          <path d="M 215 410 A 55 55 0 0 1 212 391" fill="none" stroke="#E00000" stroke-width="3" />
-          <text x="174" y="292" fill="#E00000">h</text>
-          <text x="219" y="398" fill="#E00000">θ</text>
-          <text x="475" y="237" fill="#165DCC">F</text>
-          <text x="482" y="355" fill="#555A60">L</text>
+    <div class="animation-stage" :style="{ background: scene.canvas.background }">
+      <MechanicalDiagram v-if="scene.lever || scene.pulley" :spec="scene" :time="currentTime" />
+      <svg v-else :viewBox="`0 0 ${scene.canvas.width} ${scene.canvas.height}`" role="img" :aria-label="scene.title">
+        <g v-for="item in frames" :key="item.object.id" :data-object-id="item.object.id"
+          :transform="`translate(${item.object.position.x + item.x} ${item.object.position.y + item.y})`" :opacity="item.opacity">
+          <title>{{ item.object.label }}</title>
+          <g :transform="`rotate(${Number(item.object.style.rotate || 0) + item.rotation})`">
+            <rect v-if="item.object.type === 'rect'" :width="Number(item.object.style.width || 100)" :height="Number(item.object.style.height || 72)" :fill="String(item.color || item.object.style.fill || '#B7793C')" rx="2" />
+            <circle v-else-if="item.object.type === 'circle'" :r="Number(item.object.style.radius || 42)" :fill="String(item.color || item.object.style.fill || '#B7793C')" />
+            <template v-else>
+              <line x1="0" y1="0" :x2="Number(item.object.style.length || 360)" y2="0" :stroke="String(item.color || item.object.style.stroke || '#222222')" :stroke-width="Number(item.object.style.strokeWidth || 6)" />
+              <path v-if="item.object.style.arrow" :d="arrowHead(Number(item.object.style.length))" :fill="String(item.color || item.object.style.stroke)" />
+            </template>
+            <text v-if="item.object.type !== 'line' && !(scene.inclinedPlane && item.object.id === 'load')" :x="item.object.type === 'circle' ? 0 : Number(item.object.style.width || 100) / 2" :y="item.object.type === 'circle' ? 5 : Number(item.object.style.height || 72) / 2 + 7" text-anchor="middle">{{ item.text || item.object.label }}</text>
+          </g>
+          <text v-if="item.object.type === 'line' && item.object.style.showLabel"
+            :x="lineEnd(item).x - (item.object.id === 'friction' ? 28 : 0)" :y="lineEnd(item).y + (['weight', 'friction'].includes(item.object.id) ? 18 : -10)" text-anchor="middle" :style="{ fill: String(item.object.style.stroke) }">{{ item.object.label }}</text>
         </g>
-        <g v-for="object in spec.objects" :key="object.id" :data-object-id="object.id" :transform="`translate(${object.position.x} ${object.position.y})`">
-          <rect v-if="object.type === 'rect'" :width="Number(object.style.width || 100)" :height="Number(object.style.height || 72)" :fill="String(object.style.fill || '#B7793C')" rx="3" />
-          <circle v-else-if="object.type === 'circle'" :r="Number(object.style.radius || 42)" :fill="String(object.style.fill || '#B7793C')" />
-          <line v-else :x1="0" :y1="0" :x2="Number(object.style.length || 360)" :y2="0" :stroke="String(object.style.stroke || '#222222')" :stroke-width="Number(object.style.strokeWidth || 6)" stroke-linecap="round" :transform="`rotate(${Number(object.style.rotate || 0)})`" />
-          <template v-if="object.type === 'rect'">
-            <path v-for="offset in [22, 52, 82]" :key="offset" :d="`M 0 ${offset} L ${Number(object.style.width || 100)} ${offset - 15}`" stroke="rgba(75,44,19,.28)" stroke-width="3" />
-          </template>
-          <text v-if="object.type !== 'line'" :x="object.type === 'circle' ? 0 : Number(object.style.width || 100) / 2" :y="object.type === 'circle' ? 5 : Number(object.style.height || 72) / 2 + 5" text-anchor="middle">{{ object.label }}</text>
+        <g v-if="scene.inclinedPlane" class="physics-legend">
+          <text x="38" y="42">θ = {{ scene.inclinedPlane.angleDegrees }}° · m = {{ scene.inclinedPlane.massKg }} kg · μ = {{ scene.inclinedPlane.frictionCoefficient }}</text>
+          <text x="38" y="78">F 沿斜面向上 · mg 竖直向下 · N 垂直斜面</text>
+          <text x="38" y="505">固定斜面匀速搬运 · 到顶端停稳后交接</text>
         </g>
       </svg>
-      <span class="animation-caption">{{ currentCaption }}</span>
     </div>
     <div class="player-controls">
       <button type="button" :aria-label="playing ? '暂停' : '播放'" @click="togglePlay"><Pause v-if="playing" :size="20" /><Play v-else :size="20" /></button>
-      <span>{{ formatTime(currentTime) }} / {{ formatTime(spec.duration) }}</span>
-      <input aria-label="动画进度" type="range" min="0" :max="spec.duration" step="0.1" :value="currentTime" @input="seek" />
+      <span>{{ formatTime(currentTime) }} / {{ formatTime(scene.duration) }}</span>
+      <input aria-label="动画进度" type="range" min="0" :max="scene.duration" step="0.1" :value="currentTime" @input="seek" />
       <button type="button" aria-label="重新播放" @click="restart"><RotateCcw :size="19" /></button>
     </div>
-    <p class="player-prompt">{{ currentCaption || spec.principle }}</p>
+    <p class="player-prompt" aria-live="off">{{ currentCaption || '播放或拖动进度，观察动作与受力的变化。' }}</p>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { createTimeline } from 'animejs'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { Pause, Play, RotateCcw } from '@lucide/vue'
-import type { AnimationSpec } from '@labor-edu-forge/shared'
+import { buildPhysicsAnimation, type AnimationSpec } from '@labor-edu-forge/shared'
+import { compileAnimationFrames } from '../lib/animationFrame'
+import MechanicalDiagram from './MechanicalDiagram.vue'
 
 const props = defineProps<{ spec: AnimationSpec }>()
-const stage = ref<HTMLElement>()
+const scene = computed(() => buildPhysicsAnimation(props.spec))
 const playing = ref(false)
 const currentTime = ref(0)
-let timeline: ReturnType<typeof createTimeline> | undefined
-let frame = 0
-
-const currentCaption = computed(() => [...props.spec.captions].reverse().find((item) => item.at <= currentTime.value)?.text || '')
+const tracks = computed(() => compileAnimationFrames(scene.value))
+const frames = computed(() => tracks.value.map((sample) => sample(currentTime.value)))
+const currentCaption = computed(() => [...scene.value.captions].sort((a, b) => b.at - a.at).find((item) => item.at <= currentTime.value)?.text || '')
 const formatTime = (value: number) => `${String(Math.floor(value / 60)).padStart(2, '0')}:${String(Math.floor(value % 60)).padStart(2, '0')}`
-
-async function buildTimeline() {
-  timeline?.revert()
-  await nextTick()
-  if (!stage.value) return
-  timeline = createTimeline({ autoplay: false, defaults: { duration: 1_200, ease: 'inOutQuad' } })
-  for (const action of props.spec.timeline) {
-    const target = stage.value.querySelector<SVGGElement>(`[data-object-id="${CSS.escape(action.targetId)}"]`)
-    if (!target) continue
-    const params: Record<string, string | number> = {}
-    if (action.action === 'move') { params.x = Number(action.params.x || 0); params.y = Number(action.params.y || 0) }
-    if (action.action === 'rotate') params.rotate = Number(action.params.degree || 0)
-    if (action.action === 'fade') params.opacity = Number(action.params.opacity ?? 0.25)
-    if (action.action === 'highlight') params.color = String(action.params.color || '#E00000')
-    if (action.action === 'showText') params.opacity = 1
-    timeline.add(target, params, action.at * 1_000)
-  }
-  timeline.pause()
-  currentTime.value = 0
+const arrowHead = (length: number) => {
+  const size = Math.min(12, length / 2)
+  return `M ${length} 0 l ${-size} ${-size / 2} l 0 ${size} Z`
 }
-
-function tick() {
-  if (!timeline || !playing.value) return
-  currentTime.value = Math.min(timeline.currentTime / 1_000, props.spec.duration)
-  if (currentTime.value >= props.spec.duration || timeline.completed) playing.value = false
+const lineEnd = (item: typeof frames.value[number]) => {
+  const angle = (Number(item.object.style.rotate || 0) + item.rotation) * Math.PI / 180
+  const length = Number(item.object.style.length || 360) + 14
+  return { x: length * Math.cos(angle), y: length * Math.sin(angle) }
+}
+let frame = 0
+let startedAt = 0
+function stop() { cancelAnimationFrame(frame); playing.value = false }
+function tick(now: number) {
+  currentTime.value = Math.min((now - startedAt) / 1000, scene.value.duration)
+  if (currentTime.value >= scene.value.duration) stop()
   else frame = requestAnimationFrame(tick)
 }
-function togglePlay() {
-  if (!timeline) return
-  playing.value = !playing.value
-  if (playing.value) { timeline.play(); frame = requestAnimationFrame(tick) } else timeline.pause()
+function play() {
+  cancelAnimationFrame(frame)
+  if (currentTime.value >= scene.value.duration) currentTime.value = 0
+  startedAt = performance.now() - currentTime.value * 1000
+  playing.value = true
+  frame = requestAnimationFrame(tick)
 }
-function restart() { if (!timeline) return; timeline.restart(); playing.value = true; frame = requestAnimationFrame(tick) }
-function seek(event: Event) { if (!timeline) return; const value = Number((event.target as HTMLInputElement).value); timeline.seek(value * 1_000); currentTime.value = value }
-
-watch(() => props.spec, buildTimeline, { deep: true })
-onMounted(buildTimeline)
-onBeforeUnmount(() => { cancelAnimationFrame(frame); timeline?.revert() })
+function togglePlay() { if (playing.value) stop(); else play() }
+function restart() { currentTime.value = 0; play() }
+function seek(event: Event) {
+  currentTime.value = Number((event.target as HTMLInputElement).value)
+  if (playing.value) startedAt = performance.now() - currentTime.value * 1000
+}
+watch(scene, () => { stop(); currentTime.value = 0 })
+onBeforeUnmount(stop)
 </script>

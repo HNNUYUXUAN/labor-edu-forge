@@ -60,10 +60,39 @@ export const rubricSchema = z.object({
 export const animationActionSchema = z.enum(['move', 'rotate', 'fade', 'highlight', 'showText'])
 export const animationObjectTypeSchema = z.enum(['rect', 'circle', 'line'])
 
+export const inclinedPlaneSchema = z.object({
+  angleDegrees: z.number().min(10).max(30),
+  massKg: z.number().min(0.1).max(5),
+  frictionCoefficient: z.number().min(0).max(0.3),
+  moveStart: z.number().min(0).max(170),
+  moveDuration: z.number().min(2).max(175),
+})
+
+const motionTiming = {
+  moveStart: z.number().min(0).max(170),
+  moveDuration: z.number().min(2).max(175),
+}
+export const leverSchema = z.object({
+  loadMassKg: z.number().min(0.1).max(2),
+  counterweightMassKg: z.number().min(0.1).max(2),
+  loadArmM: z.number().min(0.1).max(0.25),
+  startFraction: z.number().min(0.25).max(0.75),
+  ...motionTiming,
+})
+export const pulleySchema = z.object({
+  mode: z.enum(['fixed', 'movable']),
+  massKg: z.number().min(0.5).max(5),
+  liftHeightM: z.number().min(0.2).max(1),
+  ...motionTiming,
+})
+
 export const animationSpecSchema = z.object({
   title: shortText,
   sceneType: z.string().trim().min(1).max(80),
   duration: z.number().min(5).max(180),
+  inclinedPlane: inclinedPlaneSchema.optional(),
+  lever: leverSchema.optional(),
+  pulley: pulleySchema.optional(),
   canvas: z.object({
     width: z.number().int().min(320).max(1920),
     height: z.number().int().min(180).max(1080),
@@ -80,6 +109,8 @@ export const animationSpecSchema = z.object({
     at: z.number().min(0).max(180),
     targetId: z.string().trim().min(1).max(80),
     action: animationActionSchema,
+    duration: z.number().min(0).max(180).optional(),
+    easing: z.enum(['linear', 'easeInOut']).optional(),
     params: z.record(z.string(), z.union([z.string(), z.number()])),
   })).min(1).max(60),
   captions: z.array(z.object({ at: z.number().min(0).max(180), text: shortText })).max(30),
@@ -88,6 +119,22 @@ export const animationSpecSchema = z.object({
   safetyNotes: stringList,
 }).superRefine((spec, context) => {
   const ids = new Set(spec.objects.map((object) => object.id))
+  if ([spec.inclinedPlane, spec.lever, spec.pulley].filter(Boolean).length > 1) {
+    context.addIssue({ code: 'custom', path: ['sceneType'], message: '一个动画只能包含一种物理场景参数' })
+  }
+  for (const key of ['lever', 'pulley'] as const) {
+    const parameters = spec[key]
+    if (parameters && parameters.moveStart + parameters.moveDuration > spec.duration) {
+      context.addIssue({ code: 'custom', path: [key, 'moveDuration'], message: '动作必须在动画结束前完成' })
+    }
+  }
+  if (spec.lever && spec.lever.loadMassKg * spec.lever.loadArmM / spec.lever.counterweightMassKg > 0.55) {
+    context.addIssue({ code: 'custom', path: ['lever', 'counterweightMassKg'], message: '平衡所需秤砣力臂不得超过0.55米；请增大秤砣质量或减小载荷' })
+  }
+  if (ids.size !== spec.objects.length) context.addIssue({ code: 'custom', path: ['objects'], message: '动画对象 ID 不得重复' })
+  if (spec.inclinedPlane && spec.inclinedPlane.moveStart + spec.inclinedPlane.moveDuration > spec.duration) {
+    context.addIssue({ code: 'custom', path: ['inclinedPlane', 'moveDuration'], message: '搬运动作必须在动画结束前完成' })
+  }
   for (const [index, action] of spec.timeline.entries()) {
     if (!ids.has(action.targetId)) {
       context.addIssue({ code: 'custom', path: ['timeline', index, 'targetId'], message: `动画动作引用了不存在的对象：${action.targetId}` })
@@ -95,6 +142,12 @@ export const animationSpecSchema = z.object({
     if (action.at > spec.duration) {
       context.addIssue({ code: 'custom', path: ['timeline', index, 'at'], message: '动画动作时间不得超过总时长' })
     }
+    if (action.duration !== undefined && action.at + action.duration > spec.duration) {
+      context.addIssue({ code: 'custom', path: ['timeline', index, 'duration'], message: '动作结束时间不得超过总时长' })
+    }
+  }
+  for (const [index, caption] of spec.captions.entries()) {
+    if (caption.at > spec.duration) context.addIssue({ code: 'custom', path: ['captions', index, 'at'], message: '字幕时间不得超过总时长' })
   }
 })
 
@@ -148,9 +201,15 @@ export type LessonDesign = z.infer<typeof lessonDesignSchema>
 export type StudentTaskSheet = z.infer<typeof studentTaskSheetSchema>
 export type Rubric = z.infer<typeof rubricSchema>
 export type AnimationSpec = z.infer<typeof animationSpecSchema>
+export type InclinedPlaneParameters = z.infer<typeof inclinedPlaneSchema>
+export type LeverParameters = z.infer<typeof leverSchema>
+export type PulleyParameters = z.infer<typeof pulleySchema>
 export type LessonProjectContent = z.infer<typeof lessonProjectContentSchema>
 export type LessonProject = z.infer<typeof lessonProjectSchema>
 export type LessonTemplate = z.infer<typeof lessonTemplateSchema>
 export type ProjectListItem = z.infer<typeof projectListItemSchema>
 export type UpdateProjectInput = z.infer<typeof updateProjectInputSchema>
 export type RefineAnimationInput = z.infer<typeof refineAnimationInputSchema>
+
+export { buildInclinedPlaneAnimation, inclinedPlaneGeometry, isInclinedPlaneAnimation } from './inclinedPlane.js'
+export { buildLeverAnimation, buildPulleyAnimation, sampleLever, samplePulley, physicsKind, buildPhysicsAnimation } from './mechanics.js'

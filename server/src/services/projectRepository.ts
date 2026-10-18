@@ -2,6 +2,7 @@ import { mkdir } from 'node:fs/promises'
 import path from 'node:path'
 import { JSONFilePreset } from 'lowdb/node'
 import type { LessonProject, ProjectListItem, UpdateProjectInput } from '@labor-edu-forge/shared'
+import { serverDataDir } from '../lib/paths.js'
 
 type Database = { projects: LessonProject[] }
 let databasePromise: ReturnType<typeof JSONFilePreset<Database>> | undefined
@@ -10,7 +11,7 @@ let writeQueue: Promise<void> = Promise.resolve()
 function database() {
   if (!databasePromise) {
     databasePromise = (async () => {
-      const dataDir = process.env.LABOR_EDU_DATA_DIR || path.resolve(process.cwd(), 'server/data')
+      const dataDir = process.env.LABOR_EDU_DATA_DIR || serverDataDir
       await mkdir(dataDir, { recursive: true })
       return JSONFilePreset<Database>(path.join(dataDir, 'projects.json'), { projects: [] })
     })()
@@ -66,7 +67,8 @@ export async function updateProject(id: string, update: UpdateProjectInput) {
     if (update.section === 'studentTaskSheet') project.studentTaskSheet = update.value
     if (update.section === 'rubric') project.rubric = update.value
     if (update.section === 'animation') project.animation = update.value
-    project.updatedAt = new Date().toISOString()
+    // A revision must change even for two writes in the same millisecond or a clock adjustment.
+    project.updatedAt = new Date(Math.max(Date.now(), Date.parse(project.updatedAt) + 1)).toISOString()
     await db.write()
     return project
   })
