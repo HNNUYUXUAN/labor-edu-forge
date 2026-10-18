@@ -40,6 +40,23 @@ git push origin v1.1.1
 
 在托管平台启用适用的 secret scanning、push protection 和私密漏洞报告，并为主分支配置必需的 CI 检查。平台是否提供这些功能以仓库实际设置为准。
 
+### 同步 Gitee
+
+项目的独立 Gitee 仓库为 `https://gitee.com/hnnuxuan/labor-edu-forge`。首次配置远程：
+
+```powershell
+git remote add gitee https://gitee.com/hnnuxuan/labor-edu-forge.git
+```
+
+完成上述 GitHub CI 与 Release 验证后，将同一提交和版本标签同步到 Gitee：
+
+```powershell
+git push gitee main
+git push gitee v1.1.1
+```
+
+在 Gitee 创建对应版本的 Release，上传同一份源码 ZIP 与 `SHA256SUMS.txt`，并附上版本说明和 GitHub CI 记录。重新匿名下载 Gitee 附件，核对 SHA-256；检查两处 main 与标签的提交一致，确认公开克隆和 README 中的安装入口可用。后续发布时将示例版本号替换为目标版本。
+
 ## 验证下载后的首次使用
 
 从 GitHub Release 重新下载源码 ZIP 和校验文件，在全新目录解压并核对 SHA-256。按 README 执行 `npm ci`、`npm run dev`，先在空配置、空数据环境中打开三个案例，检查播放、暂停、进度拖动与重播；再填写本机模型配置并重启，通过页面生成备课、编辑保存、下载四份 Word，检查公式与分页。最后执行构建并验证构建预览。

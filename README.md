@@ -9,6 +9,8 @@
 
 [开始使用](#开始使用) · [观看动画](#让原理在课堂上动起来) · [版本下载](https://github.com/HNNUYUXUAN/labor-edu-forge/releases) · [交流反馈](https://github.com/HNNUYUXUAN/labor-edu-forge/issues)
 
+项目同时发布于 [GitHub](https://github.com/HNNUYUXUAN/labor-edu-forge) 与 [Gitee](https://gitee.com/hnnuxuan/labor-edu-forge)，两处提供相同的源码与版本标签。你可以选择方便的平台克隆、下载或提交问题；[Gitee 版本下载](https://gitee.com/hnnuxuan/labor-edu-forge/releases)提供源码包与 SHA-256 校验文件，[Gitee 交流反馈](https://gitee.com/hnnuxuan/labor-edu-forge/issues)欢迎分享课堂使用体验。
+
 ![内置斜面搬运案例：左侧教学目标与教学流程，右侧动画播放器，可切换任务单和评价量表](docs/images/lesson-workbench.png)
 
 ## 从参赛作品到开放课堂工具
@@ -60,6 +62,8 @@
 
 **下载版本包：** 在 [Releases](https://github.com/HNNUYUXUAN/labor-edu-forge/releases) 下载 `labor-edu-forge-v1.1.1-source.zip`，解压后进入其中的 `labor-edu-forge` 文件夹。这个目录应同时包含 `package.json`、`client`、`server` 和 `packages`，直接在此处打开终端；使用 ZIP 时只需 Node.js 和 npm。
 
+也可从 [Gitee Releases](https://gitee.com/hnnuxuan/labor-edu-forge/releases) 下载同名源码包与校验文件，两处附件内容一致。
+
 也可以下载同一 Release 的 `SHA256SUMS.txt`，用 PowerShell 的 `Get-FileHash .\labor-edu-forge-v1.1.1-source.zip -Algorithm SHA256` 核对文件完整性。
 
 **使用 Git：** 安装 Git 后运行：
@@ -68,6 +72,8 @@
 git clone https://github.com/HNNUYUXUAN/labor-edu-forge.git
 cd labor-edu-forge
 ```
+
+使用 Gitee 时，将上面的克隆命令替换为 `git clone https://gitee.com/hnnuxuan/labor-edu-forge.git`，然后同样进入 `labor-edu-forge` 目录。
 
 两种方式都在项目根目录执行：
 
