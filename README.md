@@ -1,6 +1,15 @@
 # 劳育备课工坊
 
+[![CI](https://github.com/HNNUYUXUAN/labor-edu-forge/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/HNNUYUXUAN/labor-edu-forge/actions/workflows/ci.yml)
+[![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
+
 面向师范生和新教师的劳动教育备课工作台。通过三步引导生成可编辑的教学设计、学习任务单、评价量表和声明式动画，并导出包含四份 Word 文档的 ZIP。
+
+[快速上手](#首次启动) · [动画演示](#内置案例动画) · [版本下载](https://github.com/HNNUYUXUAN/labor-edu-forge/releases) · [使用问题](https://github.com/HNNUYUXUAN/labor-edu-forge/issues)
+
+![内置斜面搬运案例：左侧教学目标与教学流程，右侧动画播放器，可切换任务单和评价量表](docs/images/lesson-workbench.png)
+
+## 可以完成什么
 
 - 内置斜面搬运、杠杆称量、滑轮提水三个案例，无 Key 也可浏览和播放。
 - 使用阿里云百炼 OpenAI 兼容接口；未配置 Key 时禁用生成与优化，不使用模拟结果替代真实调用。
@@ -9,16 +18,57 @@
 
 当前版本是**本机单用户工具**，没有登录、租户隔离、配额或公网访问控制。前后端只监听 `127.0.0.1`，不要直接暴露到公网，详见 [SECURITY.md](SECURITY.md)。
 
+| 备课成果 | 用在什么环节 |
+|---|---|
+| 教学设计 | 梳理教学目标、课堂流程、材料和安全提示 |
+| 学习任务单 | 引导学生分工、操作、记录证据和反思 |
+| 评价量表 | 从劳动技能、科学理解、安全意识与协作反思评价表现 |
+| 动画演示 | 课堂中播放、暂停或拖动进度，解释动作与受力；支持用文字提出优化要求 |
+
+导出包包含教学设计、学习任务单、评价量表和**动画说明**四份 Word 文档；动画在工作台中播放，导出包不包含视频。
+
+## 内置案例动画
+
+以下 GIF 均取自内置案例的实际页面播放器，按时间轴采集完整 0–40 秒画面，以 **2.5 倍速**循环展示。启动工作台后可按原速播放并查看原理、参数和教师提示；这些案例无需调用模型。
+
+### 斜面搬运
+
+器材箱贴合固定斜面上行，到顶端停稳。观察沿斜面的拉力、竖直向下的重力、垂直斜面的支持力和摩擦力，讨论“省力是否省功”。
+
+![斜面搬运动画：器材箱沿斜面上升，受力箭头随箱体移动，到交接台前停稳](docs/images/inclined-plane.gif)
+
+### 杠杆称量
+
+扶平杆秤并移动秤砣，两侧力矩相等后松手。画面同步显示力臂、力矩与扶平力，帮助学生区分“被扶平”和“达到平衡”。
+
+![杠杆称量动画：秤砣向外移动，右侧力矩增大，达到平衡时扶平力归零](docs/images/lever-weighing.gif)
+
+### 滑轮提水
+
+内置案例默认演示**定滑轮**：向下拉绳，水桶上升，两端移动距离相等，改变用力方向但不省力。工作台还支持动滑轮参数，其理想模型为两段绳承担载荷。
+
+![定滑轮提水动画：绳端向下移动，水桶等距离上升，显示拉力和位移关系](docs/images/pulley-watering.gif)
+
+演示采用页面注明的理想化或受约束物理模型，不能替代真实实验与课堂安全指导。素材来源与更新方法见 [展示素材说明](docs/images/README.md)。
+
 ## 首次启动
 
 需要 Node.js 24+、npm 和 Git。在仓库根目录运行。可选 Conda 环境：`conda env create -f environment.yml`，然后 `conda activate labor-edu-forge-dev`。
 
 ```powershell
+git clone https://github.com/HNNUYUXUAN/labor-edu-forge.git
+cd labor-edu-forge
 npm ci
 npm run dev
 ```
 
 `npm ci` 使用锁文件安装依赖并构建共享包；`npm run dev` 启动前也会构建共享包，首次克隆无需手工准备 `dist`。打开 [本地工作台](http://localhost:5173)，API 默认位于 `http://127.0.0.1:37856`。无 Key 时可先试用案例。
+
+**先体验，无需 Key：**点击左侧「案例模板」，选择任一案例，切换「教学设计 / 学习任务单 / 评价量表 / 动画演示」，点击播放或拖动进度。案例是只读的；生成自己的可编辑备课包需要配置模型。
+
+**再生成自己的备课：**配置下方 Key 并重启服务，点击「基于案例备课」或「新建备课」，依次完成「选择主题 → 课堂设置 → 教学重点」。生成后分区编辑，确认自动保存完成，再按需优化动画并导出 ZIP。模型生成和优化会产生服务商调用费用。
+
+![三步备课引导的第一步：选择内置案例或填写自己的劳动场景](docs/images/lesson-setup.png)
 
 需要真实生成时，首次配置可执行：
 
