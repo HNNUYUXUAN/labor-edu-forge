@@ -58,9 +58,9 @@
 
 准备 **Node.js 24+ 和 npm**，选择一种方式获取源码。
 
-**下载版本包：** 在 [Releases](https://github.com/HNNUYUXUAN/labor-edu-forge/releases) 下载 `labor-edu-forge-v1.1.0-source.zip`，解压后进入其中的 `labor-edu-forge` 文件夹。这个目录应同时包含 `package.json`、`client`、`server` 和 `packages`，直接在此处打开终端；使用 ZIP 时只需 Node.js 和 npm。
+**下载版本包：** 在 [Releases](https://github.com/HNNUYUXUAN/labor-edu-forge/releases) 下载 `labor-edu-forge-v1.1.1-source.zip`，解压后进入其中的 `labor-edu-forge` 文件夹。这个目录应同时包含 `package.json`、`client`、`server` 和 `packages`，直接在此处打开终端；使用 ZIP 时只需 Node.js 和 npm。
 
-也可以下载同一 Release 的 `SHA256SUMS.txt`，用 PowerShell 的 `Get-FileHash .\labor-edu-forge-v1.1.0-source.zip -Algorithm SHA256` 核对文件完整性。
+也可以下载同一 Release 的 `SHA256SUMS.txt`，用 PowerShell 的 `Get-FileHash .\labor-edu-forge-v1.1.1-source.zip -Algorithm SHA256` 核对文件完整性。
 
 **使用 Git：** 安装 Git 后运行：
 

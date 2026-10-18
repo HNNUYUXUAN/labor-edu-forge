@@ -21,7 +21,7 @@ git status --short
 ## 准备版本
 
 1. 更新版本号和 `CHANGELOG.md`，提交经审核的源码；保证 `git status --short` 无未提交文件。
-2. 推送 `main` 并确认发布提交的 CI 成功，再在该提交上创建注释标签，例如 `git tag -a v1.1.0 -m "Release v1.1.0"`。已有标签不要覆盖；先核对其指向。
+2. 推送 `main` 并确认发布提交的 CI 成功，再在该提交上创建注释标签，例如 `git tag -a v1.1.1 -m "Release v1.1.1"`。已有标签不要覆盖；先核对其指向。
 3. 再运行 `npm run security:all`，检查标签、提交消息和残留对象。
 4. 执行 `npm run release:source`。只分享新生成的源码 ZIP，不压缩整个开发目录。ZIP 不含 Git 历史、依赖、构建产物、本地环境文件或备课数据库。
 
@@ -33,7 +33,7 @@ git status --short
 
 ```powershell
 git push -u origin main
-git push origin v1.1.0
+git push origin v1.1.1
 ```
 
 不要使用 `--all`、`--mirror` 或未经协调的强制推送。按上一节顺序，确认 `main` 的发布提交 CI 成功后再推送标签；标签 CI 成功后，用同一标签创建 Release，附上 `CHANGELOG.md` 对应版本说明、已审核源码包和 `SHA256SUMS.txt`。CI 不调用真实模型，也不需要配置模型 Key。
